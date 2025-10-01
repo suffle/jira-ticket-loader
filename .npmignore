@@ -1,0 +1,26 @@
+# Development files
+tests/
+coverage/
+output/
+config.json
+*.log
+
+# Development dependencies
+.vscode/
+.DS_Store
+.env
+
+# Git files
+.git/
+.gitignore
+
+# Documentation that shouldn't be in the package
+CHANGELOG.md
+CONTRIBUTING.md
+
+# Node modules (already excluded by npm)
+node_modules/
+
+# Lock files (package-lock.json will be excluded by default)
+package-lock.json
+yarn.lock

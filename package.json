@@ -1,0 +1,61 @@
+{
+  "name": "@suffle/jira-ticket-loader",
+  "version": "1.0.0",
+  "description": "A Node.js package that downloads JIRA ticket content and populates markdown templates with ticket data. Perfect for generating AI prompts, documentation, or automated ticket summaries.",
+  "main": "src/index.js",
+  "bin": {
+    "jira-loader": "src/index.js"
+  },
+  "type": "module",
+  "files": [
+    "src/",
+    "templates/",
+    "config.example.json",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "clean": "rm -rf output/*",
+    "prepare": "npm run test",
+    "prepublishOnly": "npm run test"
+  },
+  "keywords": [
+    "jira",
+    "markdown",
+    "templates",
+    "automation",
+    "ai-prompts",
+    "documentation",
+    "cli",
+    "ticket-loader"
+  ],
+  "author": "Sebastian Flor",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suffle/jira-ticket-loader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/suffle/jira-ticket-loader/issues"
+  },
+  "homepage": "https://github.com/suffle/jira-ticket-loader#readme",
+  "dependencies": {
+    "axios": "^1.5.0",
+    "inquirer": "^9.2.0",
+    "fs-extra": "^11.1.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
