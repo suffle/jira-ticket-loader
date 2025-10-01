@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-10-01
+
+### BREAKING CHANGES
+- **Removed built-in templates**: Package no longer includes any template files
+- **Template path now mandatory**: Must specify template path when using non-interactive mode
+- Package size reduced by removing template files
+
+### Changed
+- Template directory must be specified with `-p/--template-path` parameter
+- Interactive mode always asks for template directory path
+- Package only includes source code, no template files
+- Templates kept in repository for testing purposes only
+
+### Improved
+- Lighter package size (no template files included)
+- More flexible - users provide their own templates
+- Clearer separation between tool and content
+- Better error messages for missing template path
+
+### Migration Guide
+Users upgrading from v1.x.x need to:
+1. Save any templates you were using from the package
+2. Update CLI commands to include `-p/--template-path` parameter
+3. Create your own template directory with `.md` files
+
 ## [1.2.0] - 2025-10-01
 
 ### Fixed

@@ -77,11 +77,6 @@ describe("ConfigManager", () => {
   });
 
   describe("default paths", () => {
-    test("should provide default template path", () => {
-      const templatePath = configManager.getDefaultTemplatePath();
-      expect(templatePath).toContain("templates");
-    });
-
     test("should provide default output path", () => {
       const outputPath = configManager.getDefaultOutputPath();
       expect(outputPath).toContain("output");

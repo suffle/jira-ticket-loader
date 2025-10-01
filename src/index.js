@@ -102,15 +102,15 @@ class JiraTicketLoader {
     try {
       // If template provided via CLI, handle it as a file path
       if (this.options.template) {
-        if (!this.templateEngine) {
-          // Initialize template engine with default path for template discovery
-          const defaultTemplatePath =
-            this.configManager.getDefaultTemplatePath();
-          this.templateEngine = new TemplateEngine(
-            defaultTemplatePath,
-            this.getDefaultOutputPath()
-          );
+        // Template path is required when template is specified
+        if (!this.options.templatePath) {
+          throw new Error("Template path (-p/--template-path) is required when using template (-e/--template)");
         }
+
+        this.templateEngine = new TemplateEngine(
+          this.options.templatePath,
+          this.getDefaultOutputPath()
+        );
 
         // Check if it's a direct file path
         if (this.options.template.endsWith(".md")) {
@@ -133,7 +133,7 @@ class JiraTicketLoader {
           throw new Error(
             `Template "${
               this.options.template
-            }" not found. Available: ${templates
+            }" not found in ${this.options.templatePath}. Available: ${templates
               .map(t => t.displayName)
               .join(", ")}`
           );
@@ -146,28 +146,25 @@ class JiraTicketLoader {
       }
 
       // Interactive mode - ask for template directory first, then template
-      if (!this.templateEngine) {
-        const templateDirAnswer = await inquirer.prompt([
-          {
-            type: "input",
-            name: "templatePath",
-            message: "Enter template directory path:",
-            default: this.configManager.getDefaultTemplatePath(),
-            validate: async input => {
-              const fs = await import("fs-extra");
-              if (!(await fs.pathExists(input))) {
-                return "Directory does not exist";
-              }
-              return true;
-            },
+      const templateDirAnswer = await inquirer.prompt([
+        {
+          type: "input",
+          name: "templatePath",
+          message: "Enter template directory path:",
+          validate: async input => {
+            const fs = await import("fs-extra");
+            if (!(await fs.pathExists(input))) {
+              return "Directory does not exist";
+            }
+            return true;
           },
-        ]);
+        },
+      ]);
 
-        this.templateEngine = new TemplateEngine(
-          templateDirAnswer.templatePath,
-          this.getDefaultOutputPath()
-        );
-      }
+      this.templateEngine = new TemplateEngine(
+        templateDirAnswer.templatePath,
+        this.getDefaultOutputPath()
+      );
 
       const templates = await this.templateEngine.getAvailableTemplates();
 
@@ -495,8 +492,8 @@ USAGE:
 
 OPTIONS:
   -t, --ticket <key>        JIRA ticket key (e.g., PROJ-123)
-  -e, --template <name>     Template name or file path (e.g., ai-prompt-frontend or /path/to/template.md)
-  -p, --template-path <dir> Template directory path (default: ./templates)
+  -e, --template <name>     Template name or file path (e.g., my-template.md or /path/to/template.md)
+  -p, --template-path <dir> Template directory path (required with -e)
   -o, --output <path>       Output directory (default: ./output)
   -c, --config <path>       Config file path (default: ./.jira-loaderrc.json)
   -s, --silent             Silent mode (no console output)
@@ -504,29 +501,29 @@ OPTIONS:
 
 MODES:
   Interactive mode:         jira-loader
-  Non-interactive mode:     jira-loader -t PROJ-123 -e ai-prompt-frontend
+  Non-interactive mode:     jira-loader -t PROJ-123 -e my-template.md -p ./templates
 
 EXAMPLES:
   # Interactive mode
   jira-loader
 
-  # Use template from default directory
-  jira-loader --ticket PROJ-123 --template ai-prompt-frontend
+  # Use template from directory
+  jira-loader --ticket PROJ-123 --template my-template.md --template-path ./templates
 
   # Use specific template file
-  jira-loader -t PROJ-123 -e /path/to/my-template.md
+  jira-loader -t PROJ-123 -e /path/to/my-template.md -p ./
 
   # Use templates from custom directory
-  jira-loader -t PROJ-123 -e frontend-template -p /custom/templates
+  jira-loader -t PROJ-123 -e frontend-template.md -p /custom/templates
 
   # Silent mode for automation
-  jira-loader -t PROJ-123 -e ai-prompt-backend -s
+  jira-loader -t PROJ-123 -e my-template.md -p ./templates -s
 
   # Custom output directory
-  jira-loader -t PROJ-123 -e ai-prompt-qa -o ./docs/jira-tickets
+  jira-loader -t PROJ-123 -e my-template.md -p ./templates -o ./docs/jira-tickets
 
   # Custom config file
-  jira-loader -t PROJ-123 -e ai-prompt-frontend -c /path/to/custom-config.json
+  jira-loader -t PROJ-123 -e my-template.md -p ./templates -c /path/to/custom-config.json
 `);
 }
 

@@ -6,11 +6,10 @@ A Node.js package that downloads JIRA ticket content and populates markdown temp
 
 - 🎯 Download ticket data from JIRA REST API
 - 📝 Template-based markdown generation with placeholders
-- 🤖 Built-in AI prompt templates for different engineering roles
 - 🔧 Interactive CLI and automated execution modes
 - ⚡ VS Code integration for seamless workflow
 - 🧪 Comprehensive test suite (39 tests)
-- 📦 Distributable package for multiple projects
+- 📦 Lightweight package - bring your own templates
 
 ## Installation
 
@@ -54,13 +53,13 @@ npm link  # For global CLI access
    }
    ```
 
-2. **Run the tool**:
+3. **Run the tool**:
    ```bash
    # Interactive mode
    jira-loader
    
-   # Automated mode
-   jira-loader -t PROJ-123 -e ai-prompt-frontend -s
+   # Automated mode (requires your own template file)
+   jira-loader -t PROJ-123 -e my-template.md -p ./templates -s
    ```
 
 ### Local Package Usage
@@ -86,8 +85,8 @@ If you're using this tool in your project:
    # Interactive mode
    npx jira-loader
    
-   # Automated mode
-   npx jira-loader -t PROJ-123 -e ai-prompt-frontend -s
+   # Automated mode (requires your own template file)
+   npx jira-loader -t PROJ-123 -e my-template.md -p ./templates -s
    
    # Or use via npm scripts
    npm run jira-doc  # (if you add it to your package.json scripts)
@@ -152,16 +151,13 @@ jira-loader -t PROJ-123 -e ai-prompt-frontend -c /path/to/my-config.json
 
 ## Templates
 
+**Important**: This package does not include any templates. You must provide your own template files.
+
 Templates are markdown files with placeholders that get replaced with JIRA ticket data.
 
-### Built-in Templates
+### Creating Templates
 
-The package includes specialized AI prompt templates:
-
-- `ai-prompt-frontend.md` - Frontend Engineer analysis prompts
-- `ai-prompt-backend.md` - Backend Engineer analysis prompts  
-- `ai-prompt-qa.md` - QA Engineer testing prompts
-- `ai-prompt-devops.md` - DevOps Engineer deployment prompts
+You need to create your own markdown template files. Templates use a simple placeholder syntax:
 
 ### Template Syntax
 
@@ -229,27 +225,27 @@ The tool will prompt you to:
 
 ```bash
 # Basic usage
-node src/index.js --ticket PROJ-123 --template ai-prompt-frontend
+jira-loader --ticket PROJ-123 --template my-template.md --template-path ./templates
 
 # Silent mode (no console output)
-node src/index.js -t PROJ-123 -e ai-prompt-backend --silent
+jira-loader -t PROJ-123 -e my-template.md -p ./templates --silent
 
 # Custom template directory
-node src/index.js -t PROJ-123 -e my-template -p /custom/templates
+jira-loader -t PROJ-123 -e frontend-template.md -p /custom/templates
 
 # Specific template file
-node src/index.js -t PROJ-123 -e /path/to/custom-template.md
+jira-loader -t PROJ-123 -e /path/to/custom-template.md -p ./
 
 # Custom output directory
-node src/index.js -t PROJ-123 -e ai-prompt-qa -o /output/path
+jira-loader -t PROJ-123 -e my-template.md -p ./templates -o /output/path
 ```
 
 ### CLI Parameters
 
 ```
 -t, --ticket <key>        JIRA ticket key (e.g., PROJ-123)
--e, --template <name>     Template name or file path
--p, --template-path <dir> Template directory path (default: ./templates)
+-e, --template <name>     Template name or file path (required)
+-p, --template-path <dir> Template directory path (required with -e)
 -o, --output <path>       Output directory (default: ./output)
 -c, --config <path>       Config file path (default: ./.jira-loaderrc.json)
 -s, --silent             Silent mode (no console output)
@@ -276,6 +272,8 @@ Add this to your project's `.vscode/tasks.json`:
         "${input:ticketKey}",
         "--template", 
         "${input:template}",
+        "--template-path",
+        "${input:templatePath}",
         "--output",
         "${workspaceFolder}/docs",
         "--silent"

@@ -36,10 +36,19 @@ export class TemplateEngine {
 
   async loadTemplate(templateName) {
     try {
-      const templatePath = path.join(this.templatePath, templateName);
+      let templatePath;
+      
+      // Check if templateName is already an absolute path or relative path with directory separators
+      if (path.isAbsolute(templateName) || templateName.includes('/') || templateName.includes('\\')) {
+        // Use the path as-is for custom template files
+        templatePath = path.resolve(templateName);
+      } else {
+        // Join with template directory for template names
+        templatePath = path.join(this.templatePath, templateName);
+      }
 
       if (!(await fs.pathExists(templatePath))) {
-        throw new Error(`Template not found: ${templateName}`);
+        throw new Error(`Template not found: ${templatePath}`);
       }
 
       const content = await fs.readFile(templatePath, "utf-8");

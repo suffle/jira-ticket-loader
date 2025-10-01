@@ -71,10 +71,6 @@ export class ConfigManager {
     return this.config;
   }
 
-  getDefaultTemplatePath() {
-    return path.resolve(process.cwd(), "templates");
-  }
-
   getDefaultOutputPath() {
     return path.resolve(process.cwd(), "output");
   }
