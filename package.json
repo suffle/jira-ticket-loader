@@ -1,6 +1,6 @@
 {
   "name": "@suffle/jira-ticket-loader",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A Node.js package that downloads JIRA ticket content and populates markdown templates with ticket data. Perfect for generating AI prompts, documentation, or automated ticket summaries.",
   "main": "src/index.js",
   "bin": {
@@ -10,7 +10,7 @@
   "files": [
     "src/",
     "templates/",
-    "config.example.json",
+    ".jira-loaderrc.example.json",
     "README.md"
   ],
   "scripts": {

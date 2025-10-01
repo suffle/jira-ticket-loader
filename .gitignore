@@ -1,7 +1,7 @@
 node_modules/
 output/*.md
 coverage/
-config.json
+.jira-loaderrc.json
 .env
 *.log
 .DS_Store

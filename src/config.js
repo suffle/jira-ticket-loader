@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CONFIG_FILE = path.join(__dirname, "..", "config.json");
+const CONFIG_FILE = path.join(__dirname, "..", ".jira-loaderrc.json");
 
 const DEFAULT_CONFIG = {
   jiraBaseUrl: "",
@@ -22,7 +22,7 @@ export class ConfigManager {
         const configData = await fs.readJson(CONFIG_FILE);
         this.config = { ...DEFAULT_CONFIG, ...configData };
       } else {
-        console.log("Creating default config.json file...");
+        console.log("Creating default .jira-loaderrc.json file...");
         await this.createDefaultConfig();
         this.config = DEFAULT_CONFIG;
       }
@@ -49,7 +49,7 @@ export class ConfigManager {
       throw new Error(
         `Missing required configuration: ${missing.join(
           ", "
-        )}. Please update config.json`
+        )}. Please update .jira-loaderrc.json`
       );
     }
 

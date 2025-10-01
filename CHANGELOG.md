@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-10-01
+
+### Changed
+- **BREAKING**: Configuration file renamed from `config.json` to `.jira-loaderrc.json`
+  - Follows modern RC file conventions (like `.eslintrc.json`, `.prettierrc.json`)
+  - Prevents conflicts with generic `config.json` files in projects
+  - More descriptive and tool-specific naming
+
+### Added
+- Example configuration file renamed to `.jira-loaderrc.example.json`
+- Updated all documentation to reflect new configuration file name
+
+### Migration Guide
+If upgrading from v1.0.x:
+1. Rename your `config.json` to `.jira-loaderrc.json`
+2. Update any scripts or documentation referencing the old file name
+
 ## [1.0.1] - 2025-10-01
 
 ### Changed

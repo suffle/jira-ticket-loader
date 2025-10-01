@@ -17,9 +17,9 @@ Thank you for your interest in contributing to JIRA Ticket Loader! This document
 
 3. **Set up your development environment**:
    ```bash
-   # Create a config.json file for testing
-   cp config.example.json config.json
-   # Edit config.json with your JIRA credentials
+   # Create a .jira-loaderrc.json file for testing
+   cp .jira-loaderrc.example.json .jira-loaderrc.json
+   # Edit .jira-loaderrc.json with your JIRA credentials
    ```
 
 4. **Run tests**:
@@ -90,7 +90,7 @@ When reporting bugs, please include:
 - Expected vs. actual behavior
 - Your environment (Node.js version, OS)
 - Error messages (full stack trace if applicable)
-- Your config.json structure (without credentials)
+- Your .jira-loaderrc.json structure (without credentials)
 
 ### Feature Requests
 

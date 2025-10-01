@@ -77,9 +77,9 @@ class JiraTicketLoader {
     } catch (error) {
       console.error("❌ Initialization failed:", error.message);
 
-      if (error.message.includes("config.json")) {
+      if (error.message.includes(".jira-loaderrc.json")) {
         console.log(
-          "\\n💡 Please update your config.json file with the correct JIRA settings."
+          "\\n💡 Please update your .jira-loaderrc.json file with the correct JIRA settings."
         );
         console.log("   Example configuration:");
         console.log("   {");

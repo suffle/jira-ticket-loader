@@ -45,7 +45,7 @@ npm link  # For global CLI access
 
 ### Global Usage (After `npm install -g`)
 
-1. **Configure JIRA connection** by creating `config.json` in your working directory:
+1. **Configure JIRA connection** by creating `.jira-loaderrc.json` in your working directory:
    ```json
    {
      "jiraBaseUrl": "https://your-company.atlassian.net",
@@ -72,7 +72,7 @@ If you're using this tool in your project:
    npm install @suffle/jira-ticket-loader
    ```
 
-2. **Configure JIRA connection** by creating `config.json`:
+2. **Configure JIRA connection** by creating `.jira-loaderrc.json`:
    ```json
    {
      "jiraBaseUrl": "https://your-company.atlassian.net",
@@ -117,7 +117,7 @@ If you're working on the package itself:
 
 ### JIRA Connection Settings
 
-Create a `config.json` file with your JIRA credentials:
+Create a `.jira-loaderrc.json` file with your JIRA credentials:
 
 ```json
 {
@@ -382,7 +382,7 @@ Add to your project's `package.json`:
 2. **Use in any project**:
    ```bash
    cd your-project
-   # Create config.json with your JIRA credentials
+   # Create .jira-loaderrc.json with your JIRA credentials
    jira-loader
    ```
 
@@ -395,13 +395,13 @@ Add to your project's `package.json`:
 
 2. **Configure for your JIRA instance**:
    ```bash
-   cp config.example.json config.json
-   # Edit config.json with your JIRA details
+   cp .jira-loaderrc.example.json .jira-loaderrc.json
+   # Edit .jira-loaderrc.json with your JIRA details
    ```
 
 3. **Add to your project's .gitignore**:
    ```gitignore
-   jira-ticket-loader/config.json
+   jira-ticket-loader/.jira-loaderrc.json
    jira-ticket-loader/output/
    jira-ticket-loader/node_modules/
    ```
@@ -411,7 +411,7 @@ Add to your project's `package.json`:
 ### Team Sharing
 
 - Share the package directory structure
-- Each team member creates their own `config.json`
+- Each team member creates their own `.jira-loaderrc.json`
 - Templates can be customized per project
 - VS Code tasks provide consistent team experience
 
@@ -437,7 +437,7 @@ jira-ticket-loader/
 │   ├── template-engine.test.js
 │   └── integration.test.js
 ├── output/              # Generated files (gitignored)
-├── config.json          # JIRA credentials (gitignored)
+├── .jira-loaderrc.json   # JIRA credentials (gitignored)
 ├── config.example.json  # Configuration template
 └── package.json         # Package definition
 ```
@@ -502,7 +502,7 @@ Always add tests for new features and run the full test suite before committing.
 ### Common Issues
 
 **"Authentication failed"**
-- Verify your email and API token in `config.json`
+- Verify your email and API token in `.jira-loaderrc.json`
 - Check if the API token has expired
 - Ensure your JIRA base URL is correct
 
