@@ -132,6 +132,22 @@ Create a `.jira-loaderrc.json` file with your JIRA credentials:
 2. Click "Create API token"
 3. Copy the generated token
 
+### Configuration File Location
+
+By default, the tool looks for `.jira-loaderrc.json` in your **current working directory**. This allows you to have different configurations for different projects.
+
+**Default behavior:**
+```bash
+# Looks for ./.jira-loaderrc.json in current directory
+jira-loader -t PROJ-123 -e ai-prompt-frontend
+```
+
+**Custom config file:**
+```bash
+# Use a specific config file
+jira-loader -t PROJ-123 -e ai-prompt-frontend -c /path/to/my-config.json
+```
+
 **Note**: Template and output paths are specified via command line, not in configuration.
 
 ## Templates
@@ -235,6 +251,7 @@ node src/index.js -t PROJ-123 -e ai-prompt-qa -o /output/path
 -e, --template <name>     Template name or file path
 -p, --template-path <dir> Template directory path (default: ./templates)
 -o, --output <path>       Output directory (default: ./output)
+-c, --config <path>       Config file path (default: ./.jira-loaderrc.json)
 -s, --silent             Silent mode (no console output)
 -h, --help               Show help
 ```

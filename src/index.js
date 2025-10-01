@@ -8,7 +8,7 @@ import { TemplateEngine } from "./template-engine.js";
 
 class JiraTicketLoader {
   constructor(options = {}) {
-    this.configManager = new ConfigManager();
+    this.configManager = new ConfigManager(options.configPath);
     this.config = null;
     this.jiraClient = null;
     this.templateEngine = null;
@@ -19,6 +19,7 @@ class JiraTicketLoader {
       template: options.template,
       templatePath: options.templatePath,
       outputPath: options.outputPath,
+      configPath: options.configPath,
       silent: options.silent || false,
       interactive: !options.ticketKey || !options.template, // Interactive if missing required params
     };
@@ -459,6 +460,10 @@ function parseArgs() {
       case "-o":
         options.outputPath = args[++i];
         break;
+      case "--config":
+      case "-c":
+        options.configPath = args[++i];
+        break;
       case "--silent":
       case "-s":
         options.silent = true;
@@ -493,6 +498,7 @@ OPTIONS:
   -e, --template <name>     Template name or file path (e.g., ai-prompt-frontend or /path/to/template.md)
   -p, --template-path <dir> Template directory path (default: ./templates)
   -o, --output <path>       Output directory (default: ./output)
+  -c, --config <path>       Config file path (default: ./.jira-loaderrc.json)
   -s, --silent             Silent mode (no console output)
   -h, --help               Show this help
 
@@ -518,6 +524,9 @@ EXAMPLES:
 
   # Custom output directory
   jira-loader -t PROJ-123 -e ai-prompt-qa -o ./docs/jira-tickets
+
+  # Custom config file
+  jira-loader -t PROJ-123 -e ai-prompt-frontend -c /path/to/custom-config.json
 `);
 }
 

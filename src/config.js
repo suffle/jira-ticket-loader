@@ -1,9 +1,5 @@
 import fs from "fs-extra";
 import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CONFIG_FILE = path.join(__dirname, "..", ".jira-loaderrc.json");
 
 const DEFAULT_CONFIG = {
   jiraBaseUrl: "",
@@ -12,17 +8,18 @@ const DEFAULT_CONFIG = {
 };
 
 export class ConfigManager {
-  constructor() {
+  constructor(configPath = null) {
     this.config = null;
+    this.configPath = configPath || path.join(process.cwd(), ".jira-loaderrc.json");
   }
 
   async loadConfig() {
     try {
-      if (await fs.pathExists(CONFIG_FILE)) {
-        const configData = await fs.readJson(CONFIG_FILE);
+      if (await fs.pathExists(this.configPath)) {
+        const configData = await fs.readJson(this.configPath);
         this.config = { ...DEFAULT_CONFIG, ...configData };
       } else {
-        console.log("Creating default .jira-loaderrc.json file...");
+        console.log(`Creating default .jira-loaderrc.json file at ${this.configPath}...`);
         await this.createDefaultConfig();
         this.config = DEFAULT_CONFIG;
       }
@@ -35,9 +32,9 @@ export class ConfigManager {
   }
 
   async createDefaultConfig() {
-    await fs.writeJson(CONFIG_FILE, DEFAULT_CONFIG, { spaces: 2 });
+    await fs.writeJson(this.configPath, DEFAULT_CONFIG, { spaces: 2 });
     console.log(
-      `Created ${CONFIG_FILE} - please update it with your JIRA settings.`
+      `Created ${this.configPath} - please update it with your JIRA settings.`
     );
   }
 
@@ -49,7 +46,7 @@ export class ConfigManager {
       throw new Error(
         `Missing required configuration: ${missing.join(
           ", "
-        )}. Please update .jira-loaderrc.json`
+        )}. Please update ${this.configPath}`
       );
     }
 

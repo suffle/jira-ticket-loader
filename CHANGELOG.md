@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-01
+
+### Fixed
+- **Configuration Path**: Config file now correctly looks in current working directory instead of package directory
+- Each project can now have its own `.jira-loaderrc.json` configuration
+
+### Added
+- **--config/-c parameter**: Specify custom configuration file path
+- Better error messages showing actual config file path being used
+- Documentation for configuration file location behavior
+
+### Changed
+- ConfigManager now uses `process.cwd()` for default config location
+- Improved help text with config parameter and examples
+
 ## [1.1.0] - 2025-10-01
 
 ### Changed
