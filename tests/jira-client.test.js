@@ -151,6 +151,94 @@ describe("JiraClient", () => {
       expect(result).toContain("*italic text*");
     });
 
+    test("should convert links with marks", () => {
+      const node = {
+        content: [
+          {
+            type: "text",
+            text: "Visit our website",
+            marks: [
+              {
+                type: "link",
+                attrs: { href: "https://example.com" },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = jiraClient.convertParagraph(node);
+      expect(result).toBe("[Visit our website](https://example.com)");
+    });
+
+    test("should convert link nodes", () => {
+      const node = {
+        content: [
+          {
+            type: "link",
+            attrs: { href: "https://github.com/user/repo" },
+            content: [{ type: "text", text: "GitHub Repository" }],
+          },
+        ],
+      };
+
+      const result = jiraClient.convertParagraph(node);
+      expect(result).toBe("[GitHub Repository](https://github.com/user/repo)");
+    });
+
+    test("should convert inline cards", () => {
+      const node = {
+        content: [
+          {
+            type: "inlineCard",
+            attrs: {
+              url: "https://jira.atlassian.com/browse/JIRA-123",
+              title: "JIRA-123: Example ticket",
+            },
+          },
+        ],
+      };
+
+      const result = jiraClient.convertParagraph(node);
+      expect(result).toBe("[JIRA-123: Example ticket](https://jira.atlassian.com/browse/JIRA-123)");
+    });
+
+    test("should convert panels with links", () => {
+      const node = {
+        type: "panel",
+        attrs: { panelType: "info" },
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "Check out ",
+              },
+              {
+                type: "text",
+                text: "this link",
+                marks: [
+                  {
+                    type: "link",
+                    attrs: { href: "https://example.com/docs" },
+                  },
+                ],
+              },
+              {
+                type: "text",
+                text: " for more info.",
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = jiraClient.convertPanel(node);
+      expect(result).toContain("> ℹ️ **Info**");
+      expect(result).toContain("[this link](https://example.com/docs)");
+    });
+
     test("should convert code blocks", () => {
       const node = {
         content: [

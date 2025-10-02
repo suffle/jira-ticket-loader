@@ -17,7 +17,6 @@ class JiraTicketLoader {
     this.options = {
       ticketKey: options.ticketKey,
       template: options.template,
-      templatePath: options.templatePath,
       outputPath: options.outputPath,
       configPath: options.configPath,
       silent: options.silent || false,
@@ -100,92 +99,73 @@ class JiraTicketLoader {
 
   async selectTemplate() {
     try {
-      // If template provided via CLI, handle it as a file path
+      // If template provided via CLI, use it as a full file path
       if (this.options.template) {
-        // Template path is required when template is specified
-        if (!this.options.templatePath) {
-          throw new Error("Template path (-p/--template-path) is required when using template (-e/--template)");
+        const fs = await import("fs-extra");
+        const templatePath = path.resolve(this.options.template);
+
+        if (!(await fs.pathExists(templatePath))) {
+          throw new Error(`Template file not found: ${templatePath}`);
         }
 
-        this.templateEngine = new TemplateEngine(
-          this.options.templatePath,
-          this.getDefaultOutputPath()
-        );
-
-        // Check if it's a direct file path
-        if (this.options.template.endsWith(".md")) {
-          if (!this.options.silent) {
-            this.log(`Using template file: ${this.options.template}`);
-          }
-          return this.options.template;
-        }
-
-        // Otherwise treat it as a template name and look for it
-        const templates = await this.templateEngine.getAvailableTemplates();
-        const selectedTemplate = templates.find(
-          t =>
-            t.name === this.options.template ||
-            t.displayName === this.options.template ||
-            t.name === `${this.options.template}.md`
-        );
-
-        if (!selectedTemplate) {
+        if (!templatePath.endsWith(".md")) {
           throw new Error(
-            `Template "${
-              this.options.template
-            }" not found in ${this.options.templatePath}. Available: ${templates
-              .map(t => t.displayName)
-              .join(", ")}`
+            `Template file must be a markdown file (.md): ${templatePath}`
           );
         }
 
         if (!this.options.silent) {
-          this.log(`Using template: ${selectedTemplate.displayName}`);
+          this.log(`Using template file: ${templatePath}`);
         }
-        return selectedTemplate.name;
+
+        // Initialize template engine with the template file's directory for output naming
+        const templateDir = path.dirname(templatePath);
+        this.templateEngine = new TemplateEngine(
+          templateDir,
+          this.getDefaultOutputPath()
+        );
+
+        return templatePath;
       }
 
-      // Interactive mode - ask for template directory first, then template
-      const templateDirAnswer = await inquirer.prompt([
+      // Interactive mode - ask for template file path
+      const templateAnswer = await inquirer.prompt([
         {
           type: "input",
           name: "templatePath",
-          message: "Enter template directory path:",
+          message:
+            "Enter template file path (e.g., ./templates/my-template.md):",
           validate: async input => {
             const fs = await import("fs-extra");
-            if (!(await fs.pathExists(input))) {
-              return "Directory does not exist";
+            const resolvedPath = path.resolve(input);
+
+            if (!(await fs.pathExists(resolvedPath))) {
+              return `Template file not found: ${resolvedPath}`;
             }
+
+            if (!resolvedPath.endsWith(".md")) {
+              return "Template file must be a markdown file (.md)";
+            }
+
             return true;
           },
         },
       ]);
 
+      const templatePath = path.resolve(templateAnswer.templatePath);
+
+      // Initialize template engine with the template file's directory
+      const templateDir = path.dirname(templatePath);
       this.templateEngine = new TemplateEngine(
-        templateDirAnswer.templatePath,
+        templateDir,
         this.getDefaultOutputPath()
       );
 
-      const templates = await this.templateEngine.getAvailableTemplates();
-
-      if (templates.length === 1) {
-        this.log(`Using template: ${templates[0].displayName}`);
-        return templates[0].name;
+      if (!this.options.silent) {
+        this.log(`Using template: ${path.basename(templatePath)}`);
       }
 
-      const answer = await inquirer.prompt([
-        {
-          type: "list",
-          name: "template",
-          message: "Select a template:",
-          choices: templates.map(t => ({
-            name: `${t.displayName} (${t.name})`,
-            value: t.name,
-          })),
-        },
-      ]);
-
-      return answer.template;
+      return templatePath;
     } catch (error) {
       throw new Error(`Template selection failed: ${error.message}`);
     }
@@ -449,10 +429,6 @@ function parseArgs() {
       case "-e":
         options.template = args[++i];
         break;
-      case "--template-path":
-      case "-p":
-        options.templatePath = args[++i];
-        break;
       case "--output":
       case "-o":
         options.outputPath = args[++i];
@@ -492,8 +468,7 @@ USAGE:
 
 OPTIONS:
   -t, --ticket <key>        JIRA ticket key (e.g., PROJ-123)
-  -e, --template <name>     Template name or file path (e.g., my-template.md or /path/to/template.md)
-  -p, --template-path <dir> Template directory path (required with -e)
+  -e, --template <path>     Full path to template file (e.g., ./templates/my-template.md)
   -o, --output <path>       Output directory (default: ./output)
   -c, --config <path>       Config file path (default: ./.jira-loaderrc.json)
   -s, --silent             Silent mode (no console output)
@@ -501,29 +476,26 @@ OPTIONS:
 
 MODES:
   Interactive mode:         jira-loader
-  Non-interactive mode:     jira-loader -t PROJ-123 -e my-template.md -p ./templates
+  Non-interactive mode:     jira-loader -t PROJ-123 -e ./templates/my-template.md
 
 EXAMPLES:
   # Interactive mode
   jira-loader
 
-  # Use template from directory
-  jira-loader --ticket PROJ-123 --template my-template.md --template-path ./templates
+  # Use template file
+  jira-loader --ticket PROJ-123 --template ./templates/my-template.md
 
-  # Use specific template file
-  jira-loader -t PROJ-123 -e /path/to/my-template.md -p ./
-
-  # Use templates from custom directory
-  jira-loader -t PROJ-123 -e frontend-template.md -p /custom/templates
+  # Use template from different directory
+  jira-loader -t PROJ-123 -e /path/to/custom-template.md
 
   # Silent mode for automation
-  jira-loader -t PROJ-123 -e my-template.md -p ./templates -s
+  jira-loader -t PROJ-123 -e ./templates/my-template.md -s
 
   # Custom output directory
-  jira-loader -t PROJ-123 -e my-template.md -p ./templates -o ./docs/jira-tickets
+  jira-loader -t PROJ-123 -e ./templates/my-template.md -o ./docs/jira-tickets
 
   # Custom config file
-  jira-loader -t PROJ-123 -e my-template.md -p ./templates -c /path/to/custom-config.json
+  jira-loader -t PROJ-123 -e ./templates/my-template.md -c /path/to/custom-config.json
 `);
 }
 

@@ -165,6 +165,11 @@ export class JiraClient {
             const code = this.extractText(node);
             const language = node.attrs?.language || "";
             return `\`\`\`${language}\\n${code}\\n\`\`\`\\n\\n`;
+          case "panel":
+          case "card":
+            return this.convertPanel(node) + "\\n\\n";
+          case "blockquote":
+            return this.convertBlockquote(node) + "\\n\\n";
           default:
             return this.extractText(node) + "\\n\\n";
         }
@@ -193,14 +198,24 @@ export class JiraClient {
                   case "code":
                     text = `\`${text}\``;
                     break;
+                  case "link":
+                    const href = mark.attrs?.href || "#";
+                    text = `[${text}](${href})`;
+                    break;
                 }
               }
             }
             return text;
+          case "link":
+            const linkText = this.extractTextOnly(inline);
+            const linkHref = inline.attrs?.href || "#";
+            return `[${linkText}](${linkHref})`;
           case "hardBreak":
             return "\\n";
+          case "inlineCard":
+            return this.convertInlineCard(inline);
           default:
-            return inline.text || "";
+            return inline.text || this.extractTextOnly(inline) || "";
         }
       })
       .join("");
@@ -217,13 +232,93 @@ export class JiraClient {
       .join("\\n");
   }
 
+  convertPanel(node) {
+    if (!node.content) return "";
+
+    // Convert panel content (which often contains paragraphs with links)
+    const content = node.content
+      .map(child => {
+        switch (child.type) {
+          case "paragraph":
+            return this.convertParagraph(child);
+          case "heading":
+            const level = "#".repeat(child.attrs?.level || 1);
+            const text = this.extractText(child);
+            return `${level} ${text}`;
+          default:
+            return this.extractText(child);
+        }
+      })
+      .join("\\n");
+
+    // Add panel styling based on panel type
+    const panelType = node.attrs?.panelType || "info";
+    switch (panelType) {
+      case "warning":
+        return `> ⚠️ **Warning**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
+      case "error":
+        return `> ❌ **Error**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
+      case "success":
+        return `> ✅ **Success**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
+      case "note":
+        return `> 📝 **Note**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
+      default:
+        return `> ℹ️ **Info**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
+    }
+  }
+
+  convertBlockquote(node) {
+    if (!node.content) return "";
+
+    const content = node.content
+      .map(child => {
+        switch (child.type) {
+          case "paragraph":
+            return this.convertParagraph(child);
+          default:
+            return this.extractText(child);
+        }
+      })
+      .join("\\n");
+
+    return `> ${content.replace(/\\n/g, "\\n> ")}`;
+  }
+
+  convertInlineCard(node) {
+    const url = node.attrs?.url || "#";
+    const title = node.attrs?.title || url;
+    return `[${title}](${url})`;
+  }
+
   extractText(node) {
     if (!node) return "";
 
     if (node.text) return node.text;
 
+    if (node.type === "link") {
+      const linkText = node.content ? node.content.map(child => this.extractTextOnly(child)).join("") : node.attrs?.href || "";
+      const linkHref = node.attrs?.href || "#";
+      return `[${linkText}](${linkHref})`;
+    }
+
+    if (node.type === "inlineCard") {
+      return this.convertInlineCard(node);
+    }
+
     if (node.content) {
       return node.content.map(child => this.extractText(child)).join("");
+    }
+
+    return "";
+  }
+
+  extractTextOnly(node) {
+    if (!node) return "";
+
+    if (node.text) return node.text;
+
+    if (node.content) {
+      return node.content.map(child => this.extractTextOnly(child)).join("");
     }
 
     return "";

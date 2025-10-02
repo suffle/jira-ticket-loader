@@ -37,9 +37,13 @@ export class TemplateEngine {
   async loadTemplate(templateName) {
     try {
       let templatePath;
-      
+
       // Check if templateName is already an absolute path or relative path with directory separators
-      if (path.isAbsolute(templateName) || templateName.includes('/') || templateName.includes('\\')) {
+      if (
+        path.isAbsolute(templateName) ||
+        templateName.includes("/") ||
+        templateName.includes("\\")
+      ) {
         // Use the path as-is for custom template files
         templatePath = path.resolve(templateName);
       } else {

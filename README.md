@@ -58,8 +58,8 @@ npm link  # For global CLI access
    # Interactive mode
    jira-loader
    
-   # Automated mode (requires your own template file)
-   jira-loader -t PROJ-123 -e my-template.md -p ./templates -s
+   # Automated mode (specify full path to template file)
+   jira-loader -t PROJ-123 -e ./templates/my-template.md -s
    ```
 
 ### Local Package Usage
@@ -85,8 +85,8 @@ If you're using this tool in your project:
    # Interactive mode
    npx jira-loader
    
-   # Automated mode (requires your own template file)
-   npx jira-loader -t PROJ-123 -e my-template.md -p ./templates -s
+   # Automated mode (specify full path to template file)
+   npx jira-loader -t PROJ-123 -e ./templates/my-template.md -s
    
    # Or use via npm scripts
    npm run jira-doc  # (if you add it to your package.json scripts)
@@ -225,27 +225,26 @@ The tool will prompt you to:
 
 ```bash
 # Basic usage
-jira-loader --ticket PROJ-123 --template my-template.md --template-path ./templates
+jira-loader --ticket PROJ-123 --template ./templates/my-template.md
 
 # Silent mode (no console output)
-jira-loader -t PROJ-123 -e my-template.md -p ./templates --silent
+jira-loader -t PROJ-123 -e ./templates/my-template.md --silent
 
-# Custom template directory
-jira-loader -t PROJ-123 -e frontend-template.md -p /custom/templates
+# Template from different directory
+jira-loader -t PROJ-123 -e /custom/templates/frontend-template.md
 
-# Specific template file
-jira-loader -t PROJ-123 -e /path/to/custom-template.md -p ./
+# Specific template file with absolute path
+jira-loader -t PROJ-123 -e /path/to/custom-template.md
 
 # Custom output directory
-jira-loader -t PROJ-123 -e my-template.md -p ./templates -o /output/path
+jira-loader -t PROJ-123 -e ./templates/my-template.md -o /output/path
 ```
 
 ### CLI Parameters
 
 ```
 -t, --ticket <key>        JIRA ticket key (e.g., PROJ-123)
--e, --template <name>     Template name or file path (required)
--p, --template-path <dir> Template directory path (required with -e)
+-e, --template <path>     Full path to template file (e.g., ./templates/my-template.md)
 -o, --output <path>       Output directory (default: ./output)
 -c, --config <path>       Config file path (default: ./.jira-loaderrc.json)
 -s, --silent             Silent mode (no console output)
@@ -272,8 +271,6 @@ Add this to your project's `.vscode/tasks.json`:
         "${input:ticketKey}",
         "--template", 
         "${input:template}",
-        "--template-path",
-        "${input:templatePath}",
         "--output",
         "${workspaceFolder}/docs",
         "--silent"
@@ -294,14 +291,8 @@ Add this to your project's `.vscode/tasks.json`:
     },
     {
       "id": "template",
-      "type": "pickString", 
-      "description": "Select template",
-      "options": [
-        {"label": "Frontend Engineer", "value": "ai-prompt-frontend"},
-        {"label": "Backend Engineer", "value": "ai-prompt-backend"},
-        {"label": "QA Engineer", "value": "ai-prompt-qa"},
-        {"label": "DevOps Engineer", "value": "ai-prompt-devops"}
-      ]
+      "type": "promptString", 
+      "description": "Enter full path to template file (e.g., ./templates/my-template.md)"
     }
   ]
 }
@@ -342,14 +333,8 @@ Add this to your project's `.vscode/tasks.json`:
     },
     {
       "id": "template",
-      "type": "pickString", 
-      "description": "Select template",
-      "options": [
-        {"label": "Frontend Engineer", "value": "ai-prompt-frontend"},
-        {"label": "Backend Engineer", "value": "ai-prompt-backend"},
-        {"label": "QA Engineer", "value": "ai-prompt-qa"},
-        {"label": "DevOps Engineer", "value": "ai-prompt-devops"}
-      ]
+      "type": "promptString", 
+      "description": "Enter full path to template file (e.g., ./templates/my-template.md)"
     }
   ]
 }
@@ -366,8 +351,8 @@ Add to your project's `package.json`:
 {
   "scripts": {
     "jira-doc": "jira-loader",
-    "jira-frontend": "jira-loader -e ai-prompt-frontend",
-    "jira-backend": "jira-loader -e ai-prompt-backend"
+    "jira-frontend": "jira-loader -e ./templates/frontend-template.md",
+    "jira-backend": "jira-loader -e ./templates/backend-template.md"
   }
 }
 ```
@@ -377,8 +362,8 @@ Add to your project's `package.json`:
 {
   "scripts": {
     "jira-doc": "npx jira-loader",
-    "jira-frontend": "npx jira-loader -e ai-prompt-frontend",
-    "jira-backend": "npx jira-loader -e ai-prompt-backend"
+    "jira-frontend": "npx jira-loader -e ./templates/frontend-template.md",
+    "jira-backend": "npx jira-loader -e ./templates/backend-template.md"
   }
 }
 ```

@@ -10,7 +10,8 @@ const DEFAULT_CONFIG = {
 export class ConfigManager {
   constructor(configPath = null) {
     this.config = null;
-    this.configPath = configPath || path.join(process.cwd(), ".jira-loaderrc.json");
+    this.configPath =
+      configPath || path.join(process.cwd(), ".jira-loaderrc.json");
   }
 
   async loadConfig() {
@@ -19,7 +20,9 @@ export class ConfigManager {
         const configData = await fs.readJson(this.configPath);
         this.config = { ...DEFAULT_CONFIG, ...configData };
       } else {
-        console.log(`Creating default .jira-loaderrc.json file at ${this.configPath}...`);
+        console.log(
+          `Creating default .jira-loaderrc.json file at ${this.configPath}...`
+        );
         await this.createDefaultConfig();
         this.config = DEFAULT_CONFIG;
       }
@@ -44,9 +47,9 @@ export class ConfigManager {
 
     if (missing.length > 0) {
       throw new Error(
-        `Missing required configuration: ${missing.join(
-          ", "
-        )}. Please update ${this.configPath}`
+        `Missing required configuration: ${missing.join(", ")}. Please update ${
+          this.configPath
+        }`
       );
     }
 
