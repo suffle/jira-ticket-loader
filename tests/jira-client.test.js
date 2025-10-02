@@ -104,166 +104,106 @@ describe("JiraClient", () => {
   });
 
   describe("text extraction", () => {
-    test("should extract text from simple nodes", () => {
+    test("should extract text fallback from simple nodes", () => {
       const node = { text: "Hello World" };
-      const result = jiraClient.extractText(node);
+      const result = jiraClient.extractTextFallback(node);
       expect(result).toBe("Hello World");
     });
 
-    test("should extract text from nested nodes", () => {
+    test("should extract text fallback from nested nodes", () => {
       const node = {
         content: [{ text: "Hello " }, { text: "World" }],
       };
-      const result = jiraClient.extractText(node);
-      expect(result).toBe("Hello World");
+      const result = jiraClient.extractTextFallback(node);
+      expect(result).toBe("Hello \nWorld");
     });
 
-    test("should handle empty nodes", () => {
-      expect(jiraClient.extractText(null)).toBe("");
-      expect(jiraClient.extractText({})).toBe("");
-      expect(jiraClient.extractText({ content: [] })).toBe("");
+    test("should handle empty nodes in fallback", () => {
+      expect(jiraClient.extractTextFallback(null)).toBe("");
+      expect(jiraClient.extractTextFallback({})).toBe("");
+      expect(jiraClient.extractTextFallback({ content: [] })).toBe("");
     });
   });
 
-  describe("ADF conversion helpers", () => {
-    test("should convert paragraphs with formatting", () => {
-      const node = {
+  describe("ADF conversion", () => {
+    test("should convert simple ADF to markdown using comprehensive parser", () => {
+      const adf = {
+        type: "doc",
+        version: 1,
         content: [
           {
-            type: "text",
-            text: "Bold text",
-            marks: [{ type: "strong" }],
-          },
-          {
-            type: "text",
-            text: " and ",
-          },
-          {
-            type: "text",
-            text: "italic text",
-            marks: [{ type: "em" }],
-          },
-        ],
+            type: "paragraph",
+            content: [
+              { type: "text", text: "Hello World" }
+            ]
+          }
+        ]
       };
 
-      const result = jiraClient.convertParagraph(node);
-      expect(result).toContain("**Bold text**");
-      expect(result).toContain("*italic text*");
+      const result = jiraClient.convertDescription(adf);
+      expect(result).toContain("Hello World");
     });
 
-    test("should convert links with marks", () => {
-      const node = {
-        content: [
-          {
-            type: "text",
-            text: "Visit our website",
-            marks: [
-              {
-                type: "link",
-                attrs: { href: "https://example.com" },
-              },
-            ],
-          },
-        ],
-      };
-
-      const result = jiraClient.convertParagraph(node);
-      expect(result).toBe("[Visit our website](https://example.com)");
-    });
-
-    test("should convert link nodes", () => {
-      const node = {
-        content: [
-          {
-            type: "link",
-            attrs: { href: "https://github.com/user/repo" },
-            content: [{ type: "text", text: "GitHub Repository" }],
-          },
-        ],
-      };
-
-      const result = jiraClient.convertParagraph(node);
-      expect(result).toBe("[GitHub Repository](https://github.com/user/repo)");
-    });
-
-    test("should convert inline cards", () => {
-      const node = {
-        content: [
-          {
-            type: "inlineCard",
-            attrs: {
-              url: "https://jira.atlassian.com/browse/JIRA-123",
-              title: "JIRA-123: Example ticket",
-            },
-          },
-        ],
-      };
-
-      const result = jiraClient.convertParagraph(node);
-      expect(result).toBe("[JIRA-123: Example ticket](https://jira.atlassian.com/browse/JIRA-123)");
-    });
-
-    test("should convert panels with links", () => {
-      const node = {
-        type: "panel",
-        attrs: { panelType: "info" },
+    test("should handle ADF with links using comprehensive parser", () => {
+      const adf = {
+        type: "doc", 
+        version: 1,
         content: [
           {
             type: "paragraph",
             content: [
               {
                 type: "text",
-                text: "Check out ",
-              },
-              {
-                type: "text",
-                text: "this link",
+                text: "Visit our site",
                 marks: [
                   {
                     type: "link",
-                    attrs: { href: "https://example.com/docs" },
-                  },
-                ],
-              },
-              {
-                type: "text",
-                text: " for more info.",
-              },
-            ],
-          },
-        ],
+                    attrs: { href: "https://example.com" }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       };
 
-      const result = jiraClient.convertPanel(node);
-      expect(result).toContain("> ℹ️ **Info**");
-      expect(result).toContain("[this link](https://example.com/docs)");
+      const result = jiraClient.convertDescription(adf);
+      expect(result).toContain("Visit our site");
+      expect(result).toContain("https://example.com");
     });
 
-    test("should convert code blocks", () => {
-      const node = {
-        content: [
-          {
-            type: "text",
-            text: 'console.log("hello");',
-          },
-        ],
-      };
-
-      const result = jiraClient.extractText(node);
-      expect(result).toBe('console.log("hello");');
+    test("should handle string descriptions", () => {
+      const description = "Plain text description";
+      const result = jiraClient.convertDescription(description);
+      expect(result).toBe("Plain text description");
     });
 
-    test("should convert lists", () => {
-      const node = {
-        content: [
-          { content: [{ type: "text", text: "Item 1" }] },
-          { content: [{ type: "text", text: "Item 2" }] },
-        ],
+    test("should handle empty/null descriptions", () => {
+      expect(jiraClient.convertDescription(null)).toBe("");
+      expect(jiraClient.convertDescription("")).toBe("");
+      expect(jiraClient.convertDescription({})).toBe("");
+    });
+
+    test("should fallback gracefully on parser errors", () => {
+      // Mock the parser to throw an error
+      const originalParser = jiraClient.adfParser;
+      jiraClient.adfParser = {
+        adfToMarkdown: () => { throw new Error("Parser error"); }
       };
 
-      const result = jiraClient.convertList(node, "-");
-      expect(result).toContain("- Item 1");
-      expect(result).toContain("- Item 2");
+      const adf = {
+        type: "doc",
+        version: 1, 
+        content: [
+          { type: "text", text: "Fallback test" }
+        ]
+      };
+
+      const result = jiraClient.convertDescription(adf);
+      expect(result).toContain("Fallback test");
+      
+      // Restore original parser
+      jiraClient.adfParser = originalParser;
     });
   });
 });

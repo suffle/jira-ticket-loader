@@ -1,10 +1,14 @@
 import axios from "axios";
+import { Parser } from "extended-markdown-adf-parser";
 
 export class JiraClient {
   constructor(config) {
     this.baseUrl = config.jiraBaseUrl.replace(/\/$/, ""); // Remove trailing slash
     this.email = config.jiraEmail;
     this.apiKey = config.jiraApiKey;
+    
+    // Initialize the ADF to Markdown parser
+    this.adfParser = new Parser();
 
     // Create authenticated axios instance
     this.client = axios.create({
@@ -135,193 +139,41 @@ export class JiraClient {
   convertDescription(description) {
     if (!description) return "";
 
-    // Basic ADF (Atlassian Document Format) to Markdown conversion
-    // This is a simplified converter - you might want to use a proper ADF parser for complex content
+    // Handle ADF (Atlassian Document Format) using the comprehensive parser
     if (typeof description === "object" && description.content) {
-      return this.convertADFToMarkdown(description);
+      try {
+        return this.adfParser.adfToMarkdown(description);
+      } catch (error) {
+        console.warn("Failed to parse ADF description:", error.message);
+        // Fallback to basic text extraction
+        return this.extractTextFallback(description);
+      }
     }
 
     // If it's already a string, return as-is
-    return description;
+    if (typeof description === "string") {
+      return description;
+    }
+
+    // For other object types without content, return empty
+    return "";
   }
 
-  convertADFToMarkdown(adf) {
-    if (!adf || !adf.content) return "";
-
+  // Fallback method for when ADF parsing fails
+  extractTextFallback(adf) {
+    if (!adf) return "";
+    
+    if (adf.text) return adf.text;
+    
+    if (!adf.content) return "";
+    
     return adf.content
       .map(node => {
-        switch (node.type) {
-          case "paragraph":
-            return this.convertParagraph(node) + "\\n\\n";
-          case "heading":
-            const level = "#".repeat(node.attrs?.level || 1);
-            const text = this.extractText(node);
-            return `${level} ${text}\\n\\n`;
-          case "bulletList":
-            return this.convertList(node, "-") + "\\n";
-          case "orderedList":
-            return this.convertList(node, "1.") + "\\n";
-          case "codeBlock":
-            const code = this.extractText(node);
-            const language = node.attrs?.language || "";
-            return `\`\`\`${language}\\n${code}\\n\`\`\`\\n\\n`;
-          case "panel":
-          case "card":
-            return this.convertPanel(node) + "\\n\\n";
-          case "blockquote":
-            return this.convertBlockquote(node) + "\\n\\n";
-          default:
-            return this.extractText(node) + "\\n\\n";
-        }
+        if (node.text) return node.text;
+        if (node.content) return this.extractTextFallback(node);
+        return "";
       })
-      .join("")
-      .trim();
-  }
-
-  convertParagraph(node) {
-    if (!node.content) return "";
-
-    return node.content
-      .map(inline => {
-        switch (inline.type) {
-          case "text":
-            let text = inline.text || "";
-            if (inline.marks) {
-              for (const mark of inline.marks) {
-                switch (mark.type) {
-                  case "strong":
-                    text = `**${text}**`;
-                    break;
-                  case "em":
-                    text = `*${text}*`;
-                    break;
-                  case "code":
-                    text = `\`${text}\``;
-                    break;
-                  case "link":
-                    const href = mark.attrs?.href || "#";
-                    text = `[${text}](${href})`;
-                    break;
-                }
-              }
-            }
-            return text;
-          case "link":
-            const linkText = this.extractTextOnly(inline);
-            const linkHref = inline.attrs?.href || "#";
-            return `[${linkText}](${linkHref})`;
-          case "hardBreak":
-            return "\\n";
-          case "inlineCard":
-            return this.convertInlineCard(inline);
-          default:
-            return inline.text || this.extractTextOnly(inline) || "";
-        }
-      })
-      .join("");
-  }
-
-  convertList(node, marker) {
-    if (!node.content) return "";
-
-    return node.content
-      .map(item => {
-        const text = this.extractText(item);
-        return `${marker} ${text}`;
-      })
-      .join("\\n");
-  }
-
-  convertPanel(node) {
-    if (!node.content) return "";
-
-    // Convert panel content (which often contains paragraphs with links)
-    const content = node.content
-      .map(child => {
-        switch (child.type) {
-          case "paragraph":
-            return this.convertParagraph(child);
-          case "heading":
-            const level = "#".repeat(child.attrs?.level || 1);
-            const text = this.extractText(child);
-            return `${level} ${text}`;
-          default:
-            return this.extractText(child);
-        }
-      })
-      .join("\\n");
-
-    // Add panel styling based on panel type
-    const panelType = node.attrs?.panelType || "info";
-    switch (panelType) {
-      case "warning":
-        return `> ⚠️ **Warning**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
-      case "error":
-        return `> ❌ **Error**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
-      case "success":
-        return `> ✅ **Success**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
-      case "note":
-        return `> 📝 **Note**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
-      default:
-        return `> ℹ️ **Info**\\n> ${content.replace(/\\n/g, "\\n> ")}`;
-    }
-  }
-
-  convertBlockquote(node) {
-    if (!node.content) return "";
-
-    const content = node.content
-      .map(child => {
-        switch (child.type) {
-          case "paragraph":
-            return this.convertParagraph(child);
-          default:
-            return this.extractText(child);
-        }
-      })
-      .join("\\n");
-
-    return `> ${content.replace(/\\n/g, "\\n> ")}`;
-  }
-
-  convertInlineCard(node) {
-    const url = node.attrs?.url || "#";
-    const title = node.attrs?.title || url;
-    return `[${title}](${url})`;
-  }
-
-  extractText(node) {
-    if (!node) return "";
-
-    if (node.text) return node.text;
-
-    if (node.type === "link") {
-      const linkText = node.content ? node.content.map(child => this.extractTextOnly(child)).join("") : node.attrs?.href || "";
-      const linkHref = node.attrs?.href || "#";
-      return `[${linkText}](${linkHref})`;
-    }
-
-    if (node.type === "inlineCard") {
-      return this.convertInlineCard(node);
-    }
-
-    if (node.content) {
-      return node.content.map(child => this.extractText(child)).join("");
-    }
-
-    return "";
-  }
-
-  extractTextOnly(node) {
-    if (!node) return "";
-
-    if (node.text) return node.text;
-
-    if (node.content) {
-      return node.content.map(child => this.extractTextOnly(child)).join("");
-    }
-
-    return "";
+      .join("\n");
   }
 
   formatDate(dateString) {
